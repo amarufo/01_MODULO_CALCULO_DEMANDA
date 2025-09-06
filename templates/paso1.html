@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Datos Generales</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+<div class="layout">
+    <!-- Sidebar -->
+    <aside class="sidebar">
+        <a href=https://amarufo.github.io/aip_amaru_fo>
+            <img src="/static/images/icono1.png" alt="Perfil Proyecto" class="profile-img">
+        </a>
+        <h2>Módulo de Estimación de Demanda <br> InverData.pe</h2>
+        <h5>Academia de Inversión Pública - Econ. Amaru Fernandez Olmedo</h5>
+        <p>
+            La presente app proyecta la demanda educativa de una institución usando datos históricos de matrícula, población y no promovidos. El usuario ingresa datos generales y series por edad y año; el sistema valida, calcula tasas de crecimiento y proyecta población, matrícula y aulas necesarias. Los resultados se muestran en un dashboard técnico con gráficos y tablas, facilitando la planificación educativa y resumiento el proceso de FORMULACIÓN DE PROYECTOS DE INVERSIÓN PÚBLICA.
+        </p>
+        <nav>
+            <a href="#">Documentación del proyecto</a>
+            <a href="#">Descargar app</a>
+            <a href=https://amarufo.github.io/aip_amaru_fo>Más contenido y recursos</a>                        
+        </nav>
+        <div class= "sidebar-social" style="display: flex; justify-content: center; align-items: center; margin-top: 2rem;">
+            <a href="https://www.youtube.com/@amarufo_inversionpublica" target="_blank"><img src="static/images/yt.png" alt="YouTube" style="width: 20%; height: 20%; object-fit: contain;"></a>
+            <a href="https://www.linkedin.com/in/amarufo/" target="_blank"><img src="static/images/in.png" alt="LinkedIn" style="width: 20%; height: 20%; object-fit: contain;"></a>
+            <a href="https://github.com/amarufo" target="_blank"><img src="static/images/gh.png" alt="GitHub" style="width: 20%; height: 20%; object-fit: contain;"></a>
+            <a href="https://wa.me/51930123005?text=Estimado,%20buen%20día..." target="_blank"><img src="static/images/wsp.png" alt="WhatsApp" style="width: 20%; height: 20%; object-fit: contain;"></a>
+            <a href="mailto:amarufo9523@gmail.com"><img src="static/images/mailito.png" alt="Email" style="width: 20%; height: 20%; object-fit: contain;"></a>
+        </div>
+    </aside>      
+    <!-- Contenido principal -->
+    <div class="content">
+            {% if error %}
+                <div class="proyec-error">{{ error }} <br> So colocará valores por defecto.</div>
+            {% endif %}                        
+            <form method="post" class="proyec-form">
+                <div class="top-btn-row"> <!-- Botones de navegación -->
+                    <button type="submit" class="proyec-btn top-btn">Guardar</button>
+                    <a href="{{ url_for('paso2') }}" class="proyec-btn top-btn" style="background:#aaa;">
+                    Continuar al siguiente paso sin guardar ➡➡
+                    </a>                
+                </div>            
+                <div class="form-group">
+                <h1 class="proyec-title">Datos Generales</h1>                
+                    <label for="nombre_proyecto">Nombre del proyecto:</label>
+                    <input type="text" name="nombre_proyecto" id="nombre_proyecto" required value="{{ datos['nombre_proyecto'] }}">
+                    <label for="nombre_colegio">Nombre del colegio:</label>
+                    <input type="text" name="nombre_colegio" id="nombre_colegio" required value="{{ datos['nombre_colegio'] }}">
+                    <label for="distrito">Distrito del colegio:</label>
+                    <input type="text" name="distrito" id="distrito" required value="{{ datos['distrito'] }}">
+                    <label for="nivel">Nivel:</label>
+                    <select name="nivel" id="nivel">
+                        <option value="Primaria" {% if datos['nivel'] == 'Primaria' %}selected{% endif %}>Primaria</option>
+                        <option value="Secundaria" {% if datos['nivel'] == 'Secundaria' %}selected{% endif %}>Secundaria</option>
+                    </select>
+
+                    <label for="radio_influencia">Radio de influencia (KM, 1.5 Primaria, 3.0 Secundaria):</label>
+                    <input type="number" name="radio_influencia" id="radio_influencia" required step="any" value="{{ datos['radio_influencia'] }}">
+
+                    <label for="area_distrito">Área del distrito (KM²):</label>
+                    <input type="number" name="area_distrito" id="area_distrito" required step="any" value="{{ datos['area_distrito'] }}">
+
+                    <label for="est_by_aula">Estudiantes por aula (según normativa = 30):</label>
+                    <input type="number" name="est_by_aula" id="est_by_aula" required value="{{ datos['est_by_aula'] }}">
+
+                    <label for="turnos">Cantidad de turnos de funcionamiento del servicio:</label>
+                    <input type="number" name="turnos" id="turnos" required value="{{ datos['turnos'] }}">
+
+                    <label for="anio_form">Año de formulación:</label>
+                    <input type="number" name="anio_form" id="anio_form" required value="{{ datos['anio_form'] }}">
+
+                    <label for="cantidad_anios_matricula">Años de matrícula disponibles (años atrás):</label>
+                    <input type="number" name="cantidad_anios_matricula" id="cantidad_anios_matricula" required value="{{ datos['cantidad_anios_matricula'] }}">
+
+                    <label for="anio_i">Inicio de funcionamiento (año):</label>
+                    <input type="number" name="anio_i" id="anio_i" required value="{{ datos['anio_i'] }}">
+
+                    <label for="anio_f">Fin de funcionamiento (año):</label>
+                    <input type="number" name="anio_f" id="anio_f" required value="{{ datos['anio_f'] }}">
+
+                    <label for="anio_censo1">Año del primer censo:</label>
+                    <input type="number" name="anio_censo1" id="anio_censo1" required value="{{ datos['anio_censo1'] }}">
+
+                    <label for="anio_censo2">Año del segundo censo:</label>
+                    <input type="number" name="anio_censo2" id="anio_censo2" required value="{{ datos['anio_censo2'] }}">
+                </div>                  
+            </form>           
+    </div>
+</div>    
+</body>
+</html>

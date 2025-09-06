@@ -1,0 +1,456 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Informe de Proyección Poblacional</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-chart-box-and-violin-plot/build/Chart.BoxPlot.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&family=Montserrat:wght@700&display=swap" rel="stylesheet">    
+</head>
+<body>
+<div class="layout">
+    <!-- Sidebar -->
+    <aside class="sidebar">
+        <a href=https://amarufo.github.io/aip_amaru_fo>
+            <img src="/static/images/icono1.png" alt="Perfil Proyecto" class="profile-img">
+        </a>
+        <h2>Módulo de Estimación de Demanda <br> InverData.pe</h2>
+        <h5>Academia de Inversión Pública - Econ. Amaru Fernandez Olmedo</h5>
+        <p>
+            La presente app proyecta la demanda educativa de una institución usando datos históricos de matrícula, población y no promovidos. El usuario ingresa datos generales y series por edad y año; el sistema valida, calcula tasas de crecimiento y proyecta población, matrícula y aulas necesarias. Los resultados se muestran en un dashboard técnico con gráficos y tablas, facilitando la planificación educativa y resumiento el proceso de FORMULACIÓN DE PROYECTOS DE INVERSIÓN PÚBLICA.
+        </p>
+        <nav>
+            <a href="{{ url_for('paso1') }}">Regresar al inicio</a>
+            <a href="#">Documentación del proyecto</a>
+            <a href="#">Descargar app</a>
+            <a href=https://amarufo.github.io/aip_amaru_fo>Más contenido y recursos</a>                        
+        </nav>
+        <div class= "sidebar-social" style="display: flex; justify-content: center; align-items: center; margin-top: 2rem;">
+            <a href="https://www.youtube.com/@amarufo_inversionpublica" target="_blank"><img src="static/images/yt.png" alt="YouTube" style="width: 20%; height: 20%; object-fit: contain;"></a>
+            <a href="https://www.linkedin.com/in/amarufo/" target="_blank"><img src="static/images/in.png" alt="LinkedIn" style="width: 20%; height: 20%; object-fit: contain;"></a>
+            <a href="https://github.com/amarufo" target="_blank"><img src="static/images/gh.png" alt="GitHub" style="width: 20%; height: 20%; object-fit: contain;"></a>
+            <a href="https://wa.me/51930123005?text=Estimado,%20buen%20día..." target="_blank"><img src="static/images/wsp.png" alt="WhatsApp" style="width: 20%; height: 20%; object-fit: contain;"></a>
+            <a href="mailto:amarufo9523@gmail.com"><img src="static/images/mailito.png" alt="Email" style="width: 20%; height: 20%; object-fit: contain;"></a>
+        </div>
+    </aside>
+    <!-- Contenido principal -->
+    <main class="content">
+        <section id="paneles" style="display: grid;"> <!-- flex para que los paneles se alineen en fila -->
+        <!-- Panel superior de ancho completo, tipo dashboard técnico -->
+        <div class="dashboard-top-panel" style="width: 100%; margin-bottom: 1.5rem; display: flex; gap: 1rem; align-items: first baseline;">
+            <!-- Columna izquierda: imagen y datos principales -->
+            <div class= "panel" style="flex: 5 1 0; display: flex; align-items: left">
+                <div class="panel-contenido">
+                    <h3>{{ datos.nombre_colegio }}</h3>
+                    <p>Distrito: {{ datos.distrito }} &mdash; Nivel educativo: {{ datos.nivel }}</p>
+                    <p>Año de formulación: <b>{{ datos.anio_form }}</b></p>
+                    <p>Área distrito: <b>{{ datos.area_distrito }} km²</b> | Radio influencia: <b>{{ datos.radio_influencia }} km</b></p>
+                    <p>Turnos: <b>{{ datos.turnos }}</b> | Estudiantes por aula: <b>{{ datos.est_by_aula }}</b></p>
+                    <p>Área de influencia: <b>{{ datos.area_influencia }} km²</b></p>
+                </div>                
+            </div>
+            <!-- Columna derecha: gráfico de aulas necesarias por edad -->
+            <div class= "panel" style="flex: 5 1 0; display: flex; align-items: left">
+                <div class="panel-contenido">
+                <h3>Aulas necesarias por edad</h3>
+                <canvas id="aulasBarChart" width="50" height="18"></canvas>
+                </div>
+            </div>
+        </div>            
+        <!-- Panel superior de ancho completo fuera del flex -->
+        <div style="width: 100%; margin-bottom: 1rem;">
+            <div class="panel" style="height:300px;">
+                <div class="panel-contenido">
+                    <h3>Población total y referencial</h3>
+                    <p>La evolución de la población total y referencial respecto al distrito de  {{ datos['distrito'] }} se muestra en los gráficos a continuación.</p>
+                    <div style="display: flex; gap: 2rem; justify-content: space-between; align-items: flex-start;">
+                        <div style="flex: 1 1 0; min-width: 0;">
+                            <canvas id="sumaBarChartPTOT" width="300" height="100"></canvas>
+                        </div>
+                        <div style="flex: 1 1 0; min-width: 0;">
+                            <canvas id="sumaBarChartPREF" width="300" height="100"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <section id="paneles" style="display: flex; gap: 1rem;"> <!-- flex para que los paneles se alineen en fila -->
+            <div style="flex: 6 0 0; min-width: 0;">
+                <div class="panel" style="height:100%;">
+                    <div class="panel-contenido">
+                        <h3>Población demandante efectiva con proyecto</h3>
+                        <canvas id="matriculaAreaChart" width="700" height="350"></canvas>
+                    </div>
+                    <div class="panel-contenido">
+                        <h3>Población demandante efectiva sin proyecto</h3>
+                        <canvas id="matriculaAreaChartSP" width="700" height="350"></canvas>
+                    </div>       
+                    <div class="panel-contenido">
+                        <h3>Población demandante potencial</h3>
+                        <canvas id="matriculaAreaChartPT" width="700" height="350"></canvas>
+                    </div>                                        
+                </div>                                
+            </div>
+            <div style="flex: 4 1 0; min-width: 0;">
+                <div class="panel" style="height:100%;">
+                    <div class="panel-contenido">
+                        <h3>Demanda total en una situación con proyecto</h3>
+                        <p>El proyecto de inversión sobre el colegio {{ datos.nombre_colegio }} atenderá una máxima demanda de {{ resultados["max_suma_tot_byaño_dic_mat_efec_cp"] }} estudiantes matriculados dentro del Horizonte de Funcionamiento del proyecto.</p>
+                        <canvas id="sumaBarChart" width="300" height="150"></canvas>
+                        <h3>Demanda total en una situación sin proyecto</h3>
+                        <p>El colegio {{ datos.nombre_colegio }} en una situación SIN PROYECTO atendería una máxima demanda de {{ resultados["max_suma_tot_byaño_dic_mat_efec_sp"] }} estudiantes matriculados dentro del Horizonte de Funcionamiento.</p>
+                        <canvas id="sumaBarChartSP" width="300" height="150"></canvas>                        
+                        <h3>Población potencial del proyecto</h3>
+                        <p>En el análisis y formulación del proyecto de inversión sobre el colegio {{ datos.nombre_colegio }} se ha estimado una población potencial maxima de {{ resultados["max_suma_tot_byaño_dic_pop_potencial"] }} personas correspondiente a estudiantes entre las edades de {{ datos["edades"] }} que viven dentro del Área de Influencia.</p>
+                        <canvas id="sumaBarChartPT" width="300" height="130"></canvas>                                                
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+</div>
+    <script>
+        // Gráfico de matrícula efectiva por edad. Gráfica de áreas apiladas
+        const data = {{ resultados["dic_mat_efec_cp"] | tojson }};
+        const edades = Object.keys(data);
+        const anios = Object.keys(data[edades[0]]);
+        const datasets = edades.map((edad, idx) => ({
+            label: `Edad ${edad}`,
+            data: anios.map(anio => data[edad][anio]),
+            borderColor: `hsl(${idx*60},70%,50%)`,
+            backgroundColor: `hsla(${idx*60},70%,50%,0.3)`,
+            fill: true,
+            tension: 0.2,
+            pointRadius: 3,
+            pointHoverRadius: 6
+        }));
+        const ctx = document.getElementById('matriculaAreaChart').getContext('2d');
+        new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: anios,
+                datasets: datasets
+            },
+            options: {
+                plugins: {
+                    legend: { position: 'top' },
+                    tooltip: {
+                        enabled: true,
+                        mode: 'nearest',
+                        intersect: false,
+                        callbacks: {
+                            label: function(context) {
+                                return `${context.dataset.label}: ${context.parsed.y}`;
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    x: { title: { display: true, text: 'Año' } },
+                    y: { title: { display: true, text: 'Matrícula proyectada' }, stacked: true, beginAtZero: true}
+                }
+            }
+        });
+        // Gráfico de matrícula efectiva SIN PROYECTO por edad. Gráfica de áreas apiladas
+        const dataSP = {{ resultados["dic_mat_efec_sp"] | tojson }};
+        const edadesSP = Object.keys(dataSP);
+        const aniosSP = Object.keys(dataSP[edadesSP[0]]);
+        const datasetsSP = edadesSP.map((edad, idx) => ({
+            label: `Edad ${edad}`,
+            data: aniosSP.map(anio => dataSP[edad][anio]),
+            borderColor: `hsl(${idx*60},70%,50%)`,
+            backgroundColor: `hsla(${idx*60},70%,50%,0.3)`,
+            fill: true,
+            tension: 0.2,
+            pointRadius: 3,
+            pointHoverRadius: 6
+        }));
+        const ctxSP = document.getElementById('matriculaAreaChartSP').getContext('2d');
+        new Chart(ctxSP, {
+            type: 'line',
+            data: {
+                labels: aniosSP,
+                datasets: datasetsSP
+            },
+            options: {
+                plugins: {
+                    legend: { position: 'top' },
+                    tooltip: {
+                        enabled: true,
+                        mode: 'nearest',
+                        intersect: false,
+                        callbacks: {
+                            label: function(context) {
+                                return `${context.dataset.label}: ${context.parsed.y}`;
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    x: { title: { display: true, text: 'Año' } },
+                    y: { title: { display: true, text: 'Matrícula proyectada' }, stacked: true, beginAtZero: true}
+                }
+            }
+        }); 
+        // Gráfico de matrícula efectiva SIN PROYECTO por edad. Gráfica de áreas apiladas
+        const dataPT = {{ resultados["dic_pop_potencial"] | tojson }};
+        const edadesPT = Object.keys(dataPT);
+        const aniosPT = Object.keys(dataPT[edadesPT[0]]);
+        const datasetsPT = edadesPT.map((edad, idx) => ({
+            label: `Edad ${edad}`,
+            data: aniosPT.map(anio => dataPT[edad][anio]),
+            borderColor: `hsl(${idx*60},70%,50%)`,
+            backgroundColor: `hsla(${idx*60},70%,50%,0.3)`,
+            fill: true,
+            tension: 0.2,
+            pointRadius: 3,
+            pointHoverRadius: 6
+        }));
+        const ctxPT = document.getElementById('matriculaAreaChartPT').getContext('2d');
+        new Chart(ctxPT, {
+            type: 'line',
+            data: {
+                labels: aniosPT,
+                datasets: datasetsPT
+            },
+            options: {
+                plugins: {
+                    legend: { position: 'top' },
+                    tooltip: {
+                        enabled: true,
+                        mode: 'nearest',
+                        intersect: false,
+                        callbacks: {
+                            label: function(context) {
+                                return `${context.dataset.label}: ${context.parsed.y}`;
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    x: { title: { display: true, text: 'Año' } },
+                    y: { title: { display: true, text: 'Población proyectada' }, stacked: true, beginAtZero: true}
+                }
+            }
+        });         
+        // Gráfico de barras de suma total por año para matrícula con proyecto
+        const sumaData = {{ resultados["suma_tot_byaño_dic_mat_efec_cp"] | tojson | safe }};
+        const sumaLabels = Object.keys(sumaData);
+        const sumaValues = Object.values(sumaData);
+        const ctxBar = document.getElementById('sumaBarChart').getContext('2d');
+        new Chart(ctxBar, {
+            type: 'bar',
+            data: {
+                labels: sumaLabels,
+                datasets: [{
+                    label: 'Suma por año',
+                    data: sumaValues,
+                    backgroundColor: 'rgba(54, 162, 235, 0.7)',
+                    borderColor: 'rgba(54, 162, 235, 1)',
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                plugins: {
+                    legend: { display: false },
+                    datalabels: {
+                        anchor: 'end',
+                        align: 'top',
+                        color: '#222',
+                        font: { weight: 'bold', size: 11 },
+                        formatter: function(value) { return value; }
+                    }
+                },
+                scales: {
+                    x: { title: { display: true, text: 'Año' } },
+                    y: { title: { display: true, text: 'Suma' }, beginAtZero: true }
+                }
+            },
+            plugins: [ChartDataLabels]
+        }); 
+        // Gráfico de barras de suma total por año para matrícula con proyecto
+        const sumaDataSP = {{ resultados["suma_tot_byaño_dic_mat_efec_sp"] | tojson | safe }};
+        const sumaLabelsSP = Object.keys(sumaDataSP);
+        const sumaValuesSP = Object.values(sumaDataSP);
+        const ctxBarSP = document.getElementById('sumaBarChartSP').getContext('2d');
+        new Chart(ctxBarSP, {
+            type: 'bar',
+            data: {
+                labels: sumaLabelsSP,
+                datasets: [{
+                    label: 'Suma por año',
+                    data:   sumaValuesSP,
+                    backgroundColor: 'rgba(54, 162, 235, 0.7)',
+                    borderColor: 'rgba(54, 162, 235, 1)',
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                plugins: {
+                    legend: { display: false },
+                    datalabels: {
+                        anchor: 'end',
+                        align: 'top',
+                        color: '#222',
+                        font: { weight: 'bold', size: 11 },
+                        formatter: function(value) { return value; }
+                    }
+                },
+                scales: {
+                    x: { title: { display: true, text: 'Año' } },
+                    y: { title: { display: true, text: 'Suma' }, beginAtZero: true }
+                }
+            },
+            plugins: [ChartDataLabels]
+        });                     
+        // Gráfico de barras de suma total por año para matrícula con proyecto
+        const sumaDataPt = {{ resultados["suma_tot_byaño_dic_pop_potencial"] | tojson | safe }};
+        const sumaLabelsPt = Object.keys(sumaDataPt);
+        const sumaValuesPt = Object.values(sumaDataPt);
+        const ctxBarPt = document.getElementById('sumaBarChartPT').getContext('2d');
+        new Chart(ctxBarPt, {
+            type: 'bar',
+            data: {
+                labels: sumaLabelsPt,
+                datasets: [{
+                    label: 'Suma por año',
+                    data:   sumaValuesPt,
+                    backgroundColor: 'rgba(54, 162, 235, 0.7)',
+                    borderColor: 'rgba(54, 162, 235, 1)',
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                plugins: {
+                    legend: { display: false },
+                    datalabels: {
+                        anchor: 'end',
+                        align: 'center',
+                        color: '#222',
+                        font: { weight: 'bold', size: 10 },
+                        rotation: -80,
+                        formatter: function(value) { return value; }
+                    }
+                },
+                scales: {
+                    x: { title: { display: true, text: 'Año' } },
+                    y: { title: { display: true, text: 'Suma' }, beginAtZero: true }
+                }
+            },
+            plugins: [ChartDataLabels]
+        });                     
+        // Gráfico de barras Para la población total 
+        const sumaDataPTOT = {{ resultados["dic_pop_total"] | tojson | safe }};
+        const sumaLabelsPTOT = Object.keys(sumaDataPTOT);
+        const sumaValuesPTOT = Object.values(sumaDataPTOT);
+        const ctxBarPTOT = document.getElementById('sumaBarChartPTOT').getContext('2d');
+        new Chart(ctxBarPTOT, {
+            type: 'bar',
+            data: {
+                labels: sumaLabelsPTOT,
+                datasets: [{
+                    label: 'Suma por año',
+                    data:   sumaValuesPTOT,
+                    backgroundColor: 'rgba(54, 162, 235, 0.7)',
+                    borderColor: 'rgba(54, 162, 235, 1)',
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                plugins: {
+                    legend: { display: false },
+                    datalabels: {
+                        anchor: 'end',
+                        align: 'center',
+                        color: '#222',
+                        font: { weight: 'bold', size: 12 },
+                        rotation: -45,                        
+                        formatter: function(value) { return value; }
+                    }
+                },
+                scales: {
+                    x: { title: { display: true, text: 'POBLACIÓN TOTAL' } },
+                    y: { title: { display: true, text: 'Suma' }, beginAtZero: true }
+                }
+            },
+            plugins: [ChartDataLabels]
+        });         
+        const sumaDataPREF = {{ resultados["dic_pop_ref"] | tojson | safe }};
+        const sumaLabelsPREF = Object.keys(sumaDataPREF);
+        const sumaValuesPREF = Object.values(sumaDataPREF);
+        const ctxBarPREF = document.getElementById('sumaBarChartPREF').getContext('2d');
+        new Chart(ctxBarPREF, {
+            type: 'bar',
+            data: {
+                labels: sumaLabelsPREF,
+                datasets: [{
+                    label: 'Población referencial',
+                    data: sumaValuesPREF,
+                    backgroundColor: 'rgba(255, 99, 132, 0.7)',
+                    borderColor: 'rgba(255, 99, 132, 1)',
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                plugins: {
+                    legend: { display: false },
+                    datalabels: {
+                        anchor: 'end',
+                        align: 'center',
+                        color: '#222',
+                        font: { weight: 'bold', size: 12 },
+                        rotation: -45,
+                        formatter: function(value) { return value; }
+                    }
+                },
+                scales: {
+                    x: { title: { display: true, text: 'POBLACIÓN REFERENCIAL' } },
+                    y: { title: { display: true, text: 'Suma' }, beginAtZero: true }
+                }
+            },
+            plugins: [ChartDataLabels]
+        });        
+        // Gráfico de barras Para las aulas necesarias por edad
+        const aulasData = {{ resultados["aulas_by_edad"] | tojson | safe }};
+        const edadesAulas = Object.keys(aulasData);
+        const aulasNecesarias = edadesAulas.map(e => aulasData[e]["aulas_necesarias"]);
+        const ctxAulas = document.getElementById('aulasBarChart').getContext('2d');
+        new Chart(ctxAulas, {
+            type: 'bar',
+            data: {
+                labels: edadesAulas,
+                datasets: [{
+                    label: 'Aulas necesarias',
+                    data: aulasNecesarias,
+                    backgroundColor: 'rgba(255, 193, 7, 0.7)',
+                    borderColor: 'rgba(255, 193, 7, 1)',
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                indexAxis: 'y', // Barras horizontales
+                plugins: {
+                    legend: { display: false },
+                    datalabels: {
+                        anchor: 'end',
+                        align: 'right',
+                        color: '#222',
+                        font: { weight: 'bold', size: 13 },
+                        formatter: function(value) { return value; }
+                    }
+                },
+                scales: {
+                    x: { title: { display: true, text: 'Cantidad de aulas' }, beginAtZero: true , max: Math.max(...aulasNecesarias) + 1},
+                    y: { title: { display: true, text: 'Edad' } }
+                }
+            },
+            plugins: [ChartDataLabels]
+        });        
+</script>   
+</body>
+</html>
